@@ -7,8 +7,22 @@ import youtube_dl
 import praw
 import random
 
+
+class color:
+   PURPLE = '\033[95m'
+   CYAN = '\033[96m'
+   DARKCYAN = '\033[36m'
+   BLUE = '\033[94m'
+   GREEN = '\033[92m'
+   YELLOW = '\033[93m'
+   RED = '\033[91m'
+   BOLD = '\033[1m'
+   UNDERLINE = '\033[4m'
+   END = '\033[0m'
+
 players = {}
 queues = {}
+bad_words = ["POTATO", "CORN", "APPLE", "TOMATO"]
 
 
 r = praw.Reddit(client_id='CLIENT_ID',client_secret= None, password='PASSWORD',user_agent='USERAGENT', username='USERNAME')
@@ -17,6 +31,7 @@ Client = discord.Client()
 client = commands.Bot(command_prefix = "h!")
 
 def check_queue(id):
+    '''checks queue to see if there are audio files to be played'''
     if queues[id] != []:
         player = queues[id].pop(0)
         players[id] = player
@@ -24,16 +39,29 @@ def check_queue(id):
 
 @client.event
 async def on_ready():
+    '''prints in command line to show it is functional'''
     print("Bot is ready!")
 
 @client.event
 async def on_message(message):
+    '''has the bot give a response to certain cues in text channel'''
     author = message.author
     content = message.content
-    print('{}: {}'.format(author,content))   
-    if message.content == "cookie":
+    channel = message.channel.name
+    print(channel)
+    print('{}: {}'.format(author,content))  
+
+    contents = message.content.split(" ")
+    for word in contents:
+        if word.upper() in bad_words:
+            await client.delete_message(message)
+            await client.send_message(message.channel, "https://tenor.com/view/watch-your-profanity-funny-gif-5600117 @" + message.author)
+        elif word.upper() == "LADYBUG":
+            await client.send_message(message.channel, ":beetle:")
+            
+    if message.content == "can i have a cookie?":
         await client.send_message(message.channel, ":cookie:")
-    if message.content == "cat":
+    if message.content == "can i have a cat?":
         await client.send_message(message.channel,"https://media1.tenor.com/images/3fe0f068821a9baec3b1991b4c3cee35/tenor.gif?itemid=4576355")
     await client.process_commands(message)
     
@@ -49,6 +77,7 @@ async def on_message(message):
 
 @client.command()
 async def ping():
+    '''checks the response time of the bot'''
     start_time = time.time()
     await client.say('Pong!')
     end_time = time.time() - start_time
@@ -60,6 +89,7 @@ async def ping():
 
 @client.command()
 async def echo(*args):
+    '''gets the bot to say text provided'''
     output = ''
     for word in args:
         output += word
@@ -68,11 +98,13 @@ async def echo(*args):
 
 @client.command(pass_context = True)
 async def join(ctx):
-        channel = ctx.message.author.voice.voice_channel
-        await client.join_voice_channel(channel)
+    '''adds the bot to the voice channel'''
+    channel = ctx.message.author.voice.voice_channel
+    await client.join_voice_channel(channel)
 
 @client.command(pass_context = True)
 async def leave(ctx):
+    '''removes the bot from the voice channel'''
     try:
         server = ctx.message.server
         voice_client = client.voice_client_in(server)
@@ -82,6 +114,7 @@ async def leave(ctx):
 
 @client.command(pass_context = True)
 async def play(ctx,url):
+    '''plays audio from url provided'''
     try:
         server = ctx.message.server
         voice_client = client.voice_client_in(server)
@@ -98,16 +131,19 @@ async def pause(ctx):
 
 @client.command(pass_context = True)
 async def stop(ctx):
+    '''stops audio from playing'''
     id = ctx.message.server.id
     players[id].stop()
 
 @client.command(pass_context = True)
 async def resume(ctx):
+    '''resumes paused audio''' 
     id = ctx.message.server.id
     players[id].resume()
 
 @client.command(pass_contextx = True)
 async def queue(ctx,url):
+    '''adds audio into a queue'''
     server = ctx.message.server
     voice_client = client.voice_client_in(server)
     player = await voice_client.create_ytdl_player(url, after=lambda a: check_queue(server.id))
@@ -121,7 +157,7 @@ async def queue(ctx,url):
 
 @client.command(pass_context=True)       
 async def clear(ctx, number):
-    '''Clears The Chat 2-100'''
+    '''Clears 2-100 posts in a given channel'''
     user_roles = [r.name.lower() for r in ctx.message.author.roles]
 
     if "admin" not in user_roles:
@@ -136,7 +172,7 @@ async def clear(ctx, number):
 
 @client.command(pass_context = True)
 async def serverinfo(ctx):
-    '''Displays Info About The Server!'''
+    '''Displays info about the server'''
 
     server = ctx.message.server
     roles = [x.name for x in server.role_hierarchy]
@@ -160,6 +196,20 @@ async def serverinfo(ctx):
     join.set_footer(text ='Created: %s'%time)
 
     return await client.say(embed = join)
+
+@client.command(pass_context = True)
+async def kick(ctx, userName: discord.User):
+	if ctx.message.author.server_permissions.administrator:
+		await client.kick(userName)
+		await client.say(str(userName) + ' has been kicked!')
+	else:
+		await client.say('Invalid permissions!')
+
+
+
+
+
+
 
 
 
