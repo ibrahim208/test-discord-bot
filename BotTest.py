@@ -167,4 +167,4 @@ async def serverinfo(ctx):
 
 
 
-client.run("NTA0NDA5MzU4MjU2MzA4MjI0.DrFcyQ.oRMEY1bIV0_UZhBZlndedGbzWBM")
+client.run("")
